@@ -49,6 +49,7 @@ else:
     sys.exit(1)
 
 remove_following = False
+remove_close_field = None
 with open(args.template) as template_file:
     for line in template_file:
         #print(line)
@@ -62,6 +63,7 @@ with open(args.template) as template_file:
                 if not fields[fld].strip():
                     #print("remove!")
                     remove_following = True
+                    remove_close_field = fld
             continue
         match = re.search("\{\{\^([a-zA-Z_ 0-9]*)\}\}", line)
         if match:
@@ -71,16 +73,18 @@ with open(args.template) as template_file:
                 #print("in")
                 if fields[fld].strip():
                     remove_following = True
+                    remove_close_field = fld
                     #print("remove!")
             continue
         match = re.search("\{\{\/([a-zA-Z_ 0-9]*)\}\}", line)
         if match:
             fld = match.group(1)
             #print(fld, "cond end")
-            if fld in fields:
+            if fld == remove_close_field:
                 #print("in")
                 #print("stop remove!")
                 remove_following = False
+                remove_close_field = None
             continue
         if remove_following:
             continue
