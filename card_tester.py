@@ -51,35 +51,35 @@ else:
 remove_following = False
 with open(args.template) as template_file:
     for line in template_file:
-        print(line)
+        #print(line)
         # fixme: only works if there is only one conditional statement per line
         match = re.search("\{\{#([a-zA-Z_ 0-9]*)\}\}", line)
         if match:
             fld = match.group(1)
-            print(fld, "cond")
+            #print(fld, "cond")
             if fld in fields:
-                print("in")
+                #print("in")
                 if not fields[fld].strip():
-                    print("remove!")
+                    #print("remove!")
                     remove_following = True
             continue
         match = re.search("\{\{\^([a-zA-Z_ 0-9]*)\}\}", line)
         if match:
             fld = match.group(1)
-            print(fld, "neg cond")
+            #print(fld, "neg cond")
             if fld in fields:
-                print("in")
+                #print("in")
                 if fields[fld].strip():
                     remove_following = True
-                    print("remove!")
+                    #print("remove!")
             continue
         match = re.search("\{\{\/([a-zA-Z_ 0-9]*)\}\}", line)
         if match:
             fld = match.group(1)
-            print(fld, "cond end")
+            #print(fld, "cond end")
             if fld in fields:
-                print("in")
-                print("stop remove!")
+                #print("in")
+                #print("stop remove!")
                 remove_following = False
             continue
         if remove_following:
