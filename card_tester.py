@@ -17,6 +17,7 @@ if not args.output:
 
 html_out = "<html>"
 html_out += "<head>"
+html_out += '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />'
 html_out += "<title>{}</title>".format(args.template)
 
 if args.style:
