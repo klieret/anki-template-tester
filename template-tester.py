@@ -4,6 +4,64 @@ import re
 import sys
 import os
 import argparse
+import logging
+try:
+    import colorlog
+except ImportError:
+    colorlog = None
+
+
+def setup_logger(name="Logger"):
+    """ Sets up a logging.Logger with the name $name. If the colorlog module
+    is available, the logger will use colors, otherwise it will be in b/w.
+    The colorlog module is available at
+    https://github.com/borntyping/python-colorlog
+    but can also easily be installed with e.g. 'sudo pip3 colorlog' or similar
+    commands.
+    
+    Arguments:
+        name: name of the logger
+
+    Returns:
+        Logger
+    """
+    if colorlog:
+        _logger = colorlog.getLogger(name)
+    else:
+        _logger = logging.getLogger(name)
+
+    if _logger.handlers:
+        # the logger already has handlers attached to it, even though
+        # we didn't add it ==> logging.get_logger got us an existing
+        # logger ==> we don't need to do anything
+        return _logger
+
+    _logger.setLevel(logging.DEBUG)
+    if colorlog is not None:
+        sh = colorlog.StreamHandler()
+        log_colors = {'DEBUG':    'cyan',
+                      'INFO':     'green',
+                      'WARNING':  'yellow',
+                      'ERROR':    'red',
+                      'CRITICAL': 'red'}
+        formatter = colorlog.ColoredFormatter(
+            '%(log_color)s%(name)s:%(levelname)s:%(message)s',
+            log_colors=log_colors)
+    else:
+        # no colorlog available:
+        sh = logging.StreamHandler()
+        formatter = logging.Formatter('%(name)s:%(levelname)s:%(message)s')
+    sh.setFormatter(formatter)
+    sh.setLevel(logging.DEBUG)
+    _logger.addHandler(sh)
+
+    if colorlog is None:
+        _logger.debug("Module colorlog not available. Log will be b/w.")
+
+    return _logger
+
+logger = setup_logger("TemplateTest")
+
 
 parser = argparse.ArgumentParser(description="Test Anki templates, i.e. fill in field values and CSS to get a HTML file that can be displayed in the web browser.")
 parser.add_argument("template", help="The HTML template", type=str)
@@ -36,7 +94,7 @@ html_out += "</head>"
 html_out += "<body>"
 
 if not os.path.exists(args.template):
-    print("HTML file/template could not be found at {}".format(
+    logger.critical("HTML file/template could not be found at {}".format(
             os.path.abspath(args.template)))
     sys.exit(1)
 
@@ -45,7 +103,7 @@ if os.path.exists(args.fields):
     # todo: this is not nice
     exec(open(args.fields).read())
 else:
-    print("fields file could not be found at {}".format(
+    logger.critical("fields file could not be found at {}".format(
             os.path.abspath(args.fields)))
     sys.exit(1)
 
