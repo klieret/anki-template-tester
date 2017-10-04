@@ -112,6 +112,7 @@ class TemplateTester(object):
         for line in lines:
             #print(line)
             # fixme: only works if there is only one conditional statement per line
+            # fixme: also fails with {{text:blah blah}} as needed in the urls
             match = re.search("\{\{#([a-zA-Z_ 0-9]*)\}\}", line)
             if match:
                 fld = match.group(1)

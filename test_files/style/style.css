@@ -1,0 +1,232 @@
+/*================================ General Styling =================================*/
+
+
+@font-face { font-family: "MSMincho"; src: url('_MSMINCHO.TTF'); }
+
+body {
+    font-family: Sans; 
+    font-size: 15px;
+    vertical-align: top;
+    text-align: left;
+    color: black;
+    background-color: white;
+}
+
+.japanese{
+    font-family: MSmincho;
+}
+
+#note{
+    text-align: center;
+    font-size: 20px
+    font-weight: normal
+}
+
+.ismarked:after{
+    content: "*"
+}
+
+.isleech{
+    color: red;
+}
+
+/*------------------------- Sections -------------------------*/
+
+.section{
+    margin-top: 20px;
+}
+
+.section-title{
+    color: #1976d2;
+    padding-left: 10px;
+    text-transform: uppercase;
+    border-bottom: solid;
+    border-bottom-width: 4px;
+    border-bottom-color: #1976d2;
+}
+
+.section-content{
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+
+/*------------------------- Images -------------------------*/
+
+.image-container {
+    overflow:auto;   
+    white-space: nowrap;
+    max-height: 320px;
+    vertical-align: center;
+    text-align: center;
+}
+
+.image-container img {
+    margin-left: 10px;
+    margin-right: 10px;
+    max-height: 290px;
+    max-width: 300px;
+}
+
+
+/*------------------------- Tools -------------------------*/
+
+#tools{
+    text-align: center;
+}
+
+
+#tools > a{
+    padding: 10px;
+    background-color: #e3f2fd;
+    color: black;
+    text-decoration: none;
+    font-size: 80%;
+    border-radius: 7px;
+}
+
+#tools > a:hover{
+    font-weight: bold;
+}
+
+#tools > a:active{
+}
+
+
+/*------------------------- Additional Information -------------------------*/
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    text-align: left;
+    padding: 4px;
+}
+
+.details tr:nth-child(even){
+    background-color: #e3f2fd
+}
+
+/*================================ Kanji2Key and Key2Kanji =================================*/
+
+
+.section-content.kanji-story{
+    background-color: #e3f2fd;
+}
+
+.keyword{
+    text-transform: capitalize;
+}
+
+#expression{
+    text-align: center;
+    font-size: 80px;
+}
+
+#keyword{
+    text-align: center;
+    font-size: 40px;
+}
+
+
+#diagram{
+    margin-top: -15px;
+    margin-bottom: -30px;
+    text-align: center;
+}
+
+#diagram_replace{
+    text-align: center;
+    font-family: MSmincho;
+    font-size: 80px;
+    font-weight: normal;
+}
+
+
+/*========================= kanji2readings ==========================*/
+
+#keyword-readings{
+    font-size: 50px;
+    text-align: center;
+}
+
+/*------------------------- Badges -------------------------*/
+
+.badge-container{
+    text-align: center;
+}
+
+.badge{
+    display: inline;
+    padding: 10px;
+}
+
+.badge.number_of_readings{
+    background-color: red;
+}
+
+.badge.onyomi{
+    background-color: #7FDBFF;
+}
+
+.badge.kunyomi{
+    background-color: #01FF70;
+}
+
+/*------------------------- Readings -------------------------*/
+
+.reading-container{
+    text-align: center;
+}
+
+.reading{
+    font-size: 50px;
+    display: inline-block;
+}
+
+.reading.onyomi{
+    color: #7FDBFF;
+}
+
+.reading.kunyomi{
+    color: #01FF70;
+}
+
+/*------------------------- Readings Story -------------------------*/
+
+.readings-story{
+    color: black;
+    padding-left: 5px;
+    border-left-width: 7px;
+    border-right-width: 7px;
+    border-left-style: solid;
+    border-right-style: solid;
+    border-top-style: dashed;
+    border-top-width: 1px;
+    padding-top: 3px;
+    padding-bottom: 3px
+}
+
+.readings-story:first-child{
+    border-top-width: 0px;
+}
+
+
+.readings-story.onyomi{
+    border-left-color: #7FDBFF;
+    border-right-color: #7FDBFF;
+}
+
+.readings-story.kunyomi{
+    border-left-color: #01FF70;
+    border-right-color: #01FF70;
+}
+
+.readings-story.combined{
+    border-left-color: #F012BE;
+    border-right-color: #F012BE;
+}
