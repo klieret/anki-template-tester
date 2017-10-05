@@ -12,8 +12,6 @@ except ImportError:
 from typing import Dict, List
 
 
-logger = setup_logger("TemplateTest")
-
 def setup_logger(name="Logger"):
     """ Sets up a logging.Logger with the name $name. If the colorlog module
     is available, the logger will use colors, otherwise it will be in b/w.
@@ -63,6 +61,7 @@ def setup_logger(name="Logger"):
 
     return _logger
 
+logger = setup_logger("TemplateTest")
 
 
 
@@ -74,16 +73,6 @@ def get_cli_args():
     parser.add_argument("-o", "--output", help="Output HTML file", type=str, default="")
     return parser.parse_args()
 
-
-# def fill_fields(string, fields: Dict[str, str]) -> str:
-#     """ Fills all fields """
-#     for field_name in fields.keys():
-#         regex_str = "\{\{" + field_name + "\}\}"
-#         string = re.sub(regex_str, fields[field_name], string)
-#         regex_str = "\{\{text:" + field_name + "\}\}"
-#         string = re.sub(regex_str, fields[field_name], string)
-#     # todo: test if there is some conditional that we didn't manage to fill
-#     # if re.match("\{\{[a-zA-Z_ ]")
 
 def next_braces(string):
     match = re.search(r"\{\{([^\}]*)\}\}", string)
@@ -111,7 +100,7 @@ def is_close_conditional(string: str) -> bool:
 
 
 def is_field(string: str) -> bool:
-    return not is_pos_conditional(string) and not is_neg_conditional(string) and not is_close_conditional(string)
+    return string and not is_pos_conditional(string) and not is_neg_conditional(string) and not is_close_conditional(string)
 
 
 def get_field_name(string: str) -> str:
@@ -123,20 +112,21 @@ def get_field_name(string: str) -> str:
         return string[1:]
     if is_field(string):
         return string
-    # shouldn't get here
-    raise ValueError
+    return ""
 
 
 def evaluate_conditional(string: str, fields: Dict[str, str]) -> bool:
     field_name = get_field_name(string)
     if field_name not in fields:
-        logger.warning("Field {} not defined! Will evaluate conditional to "
-                       "False!".format(field_name))
+        logger.warning("Field '{}' from conditional '{}' not defined! "
+                       "Will evaluate conditional to "
+                       "True!".format(field_name, string))
         return True
     if is_pos_conditional(string):
         return bool(fields[field_name].strip())
     if is_neg_conditional(string):
         return not bool(fields[field_name].strip())
+    raise ValueError
 
 
 def evaluate_conditional_chain(conditional_chain: List[str], fields: Dict[str, str]) -> bool:
@@ -147,12 +137,11 @@ def evaluate_conditional_chain(conditional_chain: List[str], fields: Dict[str, s
 
 
 def process_line(line: str, conditional_chain: List[str], fields: Dict[str, str]):
-    before = ""
-    enclosed = ""
     after = line
     out = ""
     while after:
         before, enclosed, after = next_braces(after)
+        # print(out, before, enclosed, after, conditional_chain, sep="|")
         if evaluate_conditional_chain(conditional_chain, fields):
             out += before
         if is_pos_conditional(enclosed) or is_neg_conditional(enclosed):
@@ -160,7 +149,7 @@ def process_line(line: str, conditional_chain: List[str], fields: Dict[str, str]
         elif is_close_conditional(enclosed):
             if not len(conditional_chain) >= 1:
                 logger.error("Closing conditional '{}' found, but we didn't "
-                             "encouter a conditional before.".format(enclosed))
+                             "encounter a conditional before.".format(enclosed))
             else:
                 field_name = get_field_name(enclosed)
                 if field_name not in conditional_chain[-1]:
@@ -171,6 +160,10 @@ def process_line(line: str, conditional_chain: List[str], fields: Dict[str, str]
                                                               field_name))
                 else:
                     conditional_chain.pop()
+        elif is_field(enclosed):
+            # print(enclosed)
+            out += fields[get_field_name(enclosed).replace("text:", "")]
+    return out, conditional_chain
 
 
 class TemplateTester(object):
@@ -205,48 +198,11 @@ class TemplateTester(object):
         self.html += "</html>"
 
     def main_loop(self):
-        remove_following = False
-        remove_close_field = None
         lines = self.template.split("\n")
+        conditional_chain = []
         for line in lines:
-            #print(line)
-            # fixme: only works if there is only one conditional statement per line
-            # fixme: also fails with {{text:blah blah}} as needed in the urls
-            match = re.search("\{\{#([a-zA-Z_ 0-9]*)\}\}", line)
-            if match:
-                fld = match.group(1)
-                #print(fld, "cond")
-                if fld in fields:
-                    #print("in")
-                    if not fields[fld].strip():
-                        #print("remove!")
-                        remove_following = True
-                        remove_close_field = fld
-                continue
-            match = re.search("\{\{\^([a-zA-Z_ 0-9]*)\}\}", line)
-            if match:
-                fld = match.group(1)
-                #print(fld, "neg cond")
-                if fld in fields:
-                    #print("in")
-                    if fields[fld].strip():
-                        remove_following = True
-                        remove_close_field = fld
-                        #print("remove!")
-                continue
-            match = re.search("\{\{\/([a-zA-Z_ 0-9]*)\}\}", line)
-            if match:
-                fld = match.group(1)
-                #print(fld, "cond end")
-                if fld == remove_close_field:
-                    #print("in")
-                    #print("stop remove!")
-                    remove_following = False
-                    remove_close_field = None
-                continue
-            if remove_following:
-                continue
-            self.html += line
+            out, conditional_chain = process_line(line, conditional_chain, self.fields)
+            self.html += out
 
 
 if __name__ == "__main__":
