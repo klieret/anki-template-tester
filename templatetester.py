@@ -9,7 +9,10 @@ try:
     import colorlog
 except ImportError:
     colorlog = None
+from typing import Dict, List
 
+
+logger = setup_logger("TemplateTest")
 
 def setup_logger(name="Logger"):
     """ Sets up a logging.Logger with the name $name. If the colorlog module
@@ -72,6 +75,102 @@ def get_cli_args():
     return parser.parse_args()
 
 
+# def fill_fields(string, fields: Dict[str, str]) -> str:
+#     """ Fills all fields """
+#     for field_name in fields.keys():
+#         regex_str = "\{\{" + field_name + "\}\}"
+#         string = re.sub(regex_str, fields[field_name], string)
+#         regex_str = "\{\{text:" + field_name + "\}\}"
+#         string = re.sub(regex_str, fields[field_name], string)
+#     # todo: test if there is some conditional that we didn't manage to fill
+#     # if re.match("\{\{[a-zA-Z_ ]")
+
+def next_braces(string):
+    match = re.search(r"\{\{([^\}]*)\}\}", string)
+    if not match:
+        before = string
+        enclosed = ""
+        after = ""
+    else:
+        enclosed = match.groups(0)[0]
+        before = string[:match.span(0)[0]]
+        after = string[match.span(0)[1]:]
+    return before, enclosed, after
+
+
+def is_pos_conditional(string: str) -> bool:
+    return string.startswith("#")
+
+
+def is_neg_conditional(string: str) -> bool:
+    return string.startswith("^")
+
+
+def is_close_conditional(string: str) -> bool:
+    return string.startswith("/")
+
+
+def is_field(string: str) -> bool:
+    return not is_pos_conditional(string) and not is_neg_conditional(string) and not is_close_conditional(string)
+
+
+def get_field_name(string: str) -> str:
+    if is_pos_conditional(string):
+        return string[1:]
+    if is_neg_conditional(string):
+        return string[1:]
+    if is_close_conditional(string):
+        return string[1:]
+    if is_field(string):
+        return string
+    # shouldn't get here
+    raise ValueError
+
+
+def evaluate_conditional(string: str, fields: Dict[str, str]) -> bool:
+    field_name = get_field_name(string)
+    if field_name not in fields:
+        logger.warning("Field {} not defined! Will evaluate conditional to "
+                       "False!".format(field_name))
+        return True
+    if is_pos_conditional(string):
+        return bool(fields[field_name].strip())
+    if is_neg_conditional(string):
+        return not bool(fields[field_name].strip())
+
+
+def evaluate_conditional_chain(conditional_chain: List[str], fields: Dict[str, str]) -> bool:
+    for conditional in conditional_chain:
+        if not evaluate_conditional(conditional, fields):
+            return False
+    return True
+
+
+def process_line(line: str, conditional_chain: List[str], fields: Dict[str, str]):
+    before = ""
+    enclosed = ""
+    after = line
+    out = ""
+    while after:
+        before, enclosed, after = next_braces(after)
+        if evaluate_conditional_chain(conditional_chain, fields):
+            out += before
+        if is_pos_conditional(enclosed) or is_neg_conditional(enclosed):
+            conditional_chain.append(enclosed)
+        elif is_close_conditional(enclosed):
+            if not len(conditional_chain) >= 1:
+                logger.error("Closing conditional '{}' found, but we didn't "
+                             "encouter a conditional before.".format(enclosed))
+            else:
+                field_name = get_field_name(enclosed)
+                if field_name not in conditional_chain[-1]:
+                    logger.error("Closing conditional '{}' found, "
+                                 "but the last opened conditional "
+                                 "was {}. "
+                                 "I will ignore this.".format(enclosed,
+                                                              field_name))
+                else:
+                    conditional_chain.pop()
 
 
 class TemplateTester(object):
@@ -147,14 +246,10 @@ class TemplateTester(object):
                 continue
             if remove_following:
                 continue
-            # and try to replace the fields with the field values above
-            for field_name in fields.keys():
-                line = re.sub("\{\{" + field_name + "\}\}", fields[field_name], line)
             self.html += line
 
 
 if __name__ == "__main__":
-    logger = setup_logger("TemplateTest")
     args = get_cli_args()
 
     if not args.output:
