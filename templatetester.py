@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import re
-import sys
 import os
 import argparse
 import logging
@@ -64,13 +63,16 @@ def setup_logger(name="Logger"):
 logger = setup_logger("TemplateTest")
 
 
-
 def get_cli_args():
-    parser = argparse.ArgumentParser(description="Test Anki templates, i.e. fill in field values and CSS to get a HTML file that can be displayed in the web browser.")
+    _ = "Test Anki templates, i.e. fill in field values and CSS to get a " \
+        "HTML file that can be displayed in the web browser."
+    parser = argparse.ArgumentParser(description=_)
     parser.add_argument("template", help="The HTML template", type=str)
-    parser.add_argument("fields", help="python file with dictionary containing field values", type=str)
+    _ = "python file with dictionary containing field values"
+    parser.add_argument("fields", help=_, type=str)
     parser.add_argument("-s", "--style", help="Include CSS style sheet")
-    parser.add_argument("-o", "--output", help="Output HTML file", type=str, default="")
+    _ = "Output HTML file"
+    parser.add_argument("-o", "--output", help=_, type=str, default="")
     return parser.parse_args()
 
 
@@ -100,7 +102,8 @@ def is_close_conditional(string: str) -> bool:
 
 
 def is_field(string: str) -> bool:
-    return string and not is_pos_conditional(string) and not is_neg_conditional(string) and not is_close_conditional(string)
+    return string and not is_pos_conditional(string) and not \
+        is_neg_conditional(string) and not is_close_conditional(string)
 
 
 def get_field_name(string: str) -> str:
@@ -129,14 +132,16 @@ def evaluate_conditional(string: str, fields: Dict[str, str]) -> bool:
     raise ValueError
 
 
-def evaluate_conditional_chain(conditional_chain: List[str], fields: Dict[str, str]) -> bool:
+def evaluate_conditional_chain(conditional_chain: List[str],
+                               fields: Dict[str, str]) -> bool:
     for conditional in conditional_chain:
         if not evaluate_conditional(conditional, fields):
             return False
     return True
 
 
-def process_line(line: str, conditional_chain: List[str], fields: Dict[str, str]):
+def process_line(line: str, conditional_chain: List[str],
+                 fields: Dict[str, str]):
     after = line
     out = ""
     while after:
@@ -149,7 +154,8 @@ def process_line(line: str, conditional_chain: List[str], fields: Dict[str, str]
         elif is_close_conditional(enclosed):
             if not len(conditional_chain) >= 1:
                 logger.error("Closing conditional '{}' found, but we didn't "
-                             "encounter a conditional before.".format(enclosed))
+                             "encounter a conditional "
+                             "before.".format(enclosed))
             else:
                 field_name = get_field_name(enclosed)
                 if field_name not in conditional_chain[-1]:
@@ -161,7 +167,7 @@ def process_line(line: str, conditional_chain: List[str], fields: Dict[str, str]
                 else:
                     conditional_chain.pop()
         elif is_field(enclosed):
-            # print(enclosed)
+            # fixme: first tests if that is a valid field!
             out += fields[get_field_name(enclosed).replace("text:", "")]
     return out, conditional_chain
 
@@ -182,8 +188,9 @@ class TemplateTester(object):
     def start_html_file(self):
         self.html = "<html>"
         self.html += "<head>"
-        self.html += '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />'
-        self.html += "<title>{}</title>".format(args.template)
+        self.html += '<meta http-equiv="Content-Type" content="text/html; ' \
+                     'charset=utf-8" />'
+        self.html += "<title>{}</title>".format("Rending")
 
         if self.css:
             self.html += "<style>"
@@ -201,7 +208,8 @@ class TemplateTester(object):
         lines = self.template.split("\n")
         conditional_chain = []
         for line in lines:
-            out, conditional_chain = process_line(line, conditional_chain, self.fields)
+            out, conditional_chain = process_line(line, conditional_chain,
+                                                  self.fields)
             self.html += out
 
 
@@ -213,26 +221,26 @@ if __name__ == "__main__":
         logger.warning("Output file name was automatically "
                        "set to {}.".format(args.output))
 
-    css = ""
+    css_ = ""
     if args.style:
         try:
             with open(args.style) as css_file:
-                css = css_file.read()
+                css_ = css_file.read()
         except:
             logger.error("Could not load css file from {}. "
                          "Leaving it empty.").format(args.style)
 
-    template = ""
+    template_ = ""
     try:
         with open(args.template) as template_file:
-            template = template_file.read()
+            template_ = template_file.read()
     except:
         _ = "Could not load template file from {}. " \
             "Abort.".format(args.template)
         logger.critical(_)
         raise
 
-    fields = {}
+    fields_ = {}
     if args.fields:
         try:
             with open(args.fields) as field_file:
@@ -243,7 +251,7 @@ if __name__ == "__main__":
                 "Abort.".format(args.template)
             raise
 
-    tt = TemplateTester(template, fields, css)
+    tt = TemplateTester(template_, fields_, css_)
     html_out = tt.render()
 
     with open(args.output, "w") as output_file:
