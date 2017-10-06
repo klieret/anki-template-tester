@@ -9,6 +9,9 @@ try:
 except ImportError:
     colorlog = None
 from typing import Dict, List
+import csv
+
+
 
 
 def setup_logger(name="Logger"):
@@ -61,6 +64,21 @@ def setup_logger(name="Logger"):
     return _logger
 
 logger = setup_logger("TemplateTest")
+
+
+def import_dict(filename):
+    ret = {}
+    with open(filename) as csvfile:
+        reader = csv.reader(csvfile, delimiter=":", quotechar='"')
+        i = 0
+        for row in reader:
+            i += 1
+            if not len(row) == 2:
+                logger.warning("Row {} of file {} does not seem to have "
+                               "the proper format. Skip.".format(i, filename))
+                continue
+            ret[row[0]] = row[1]
+    return ret
 
 
 def get_cli_args():
@@ -170,7 +188,7 @@ def process_line(line: str, conditional_chain: List[str],
             if field_name in fields:
                 out += fields[field_name]
             else:
-                _ = "Could not find value for field {}".format(field_name)
+                _ = "Could not find value for field '{}'".format(field_name)
                 logger.error(_)
     return out, conditional_chain
 
@@ -246,9 +264,7 @@ if __name__ == "__main__":
     fields_ = {}
     if args.fields:
         try:
-            with open(args.fields) as field_file:
-                # todo: this is not nice
-                exec(field_file.read())
+                fields_ = import_dict(args.fields)
         except:
             _ = "Could not load template file from {}. " \
                 "Abort.".format(args.template)
