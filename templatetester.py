@@ -114,6 +114,7 @@ def get_field_name(string: str) -> str:
     if is_close_conditional(string):
         return string[1:]
     if is_field(string):
+        string = string.replace("text:", "")
         return string
     return ""
 
@@ -146,34 +147,36 @@ def process_line(line: str, conditional_chain: List[str],
     out = ""
     while after:
         before, enclosed, after = next_braces(after)
-        # print(out, before, enclosed, after, conditional_chain, sep="|")
         if evaluate_conditional_chain(conditional_chain, fields):
             out += before
         if is_pos_conditional(enclosed) or is_neg_conditional(enclosed):
             conditional_chain.append(enclosed)
         elif is_close_conditional(enclosed):
             if not len(conditional_chain) >= 1:
-                logger.error("Closing conditional '{}' found, but we didn't "
-                             "encounter a conditional "
-                             "before.".format(enclosed))
+                _ = "Closing conditional '{}' found, but we didn't encounter" \
+                    " a conditional before.".format(enclosed)
+                logger.error(_)
             else:
                 field_name = get_field_name(enclosed)
                 if field_name not in conditional_chain[-1]:
-                    logger.error("Closing conditional '{}' found, "
-                                 "but the last opened conditional "
-                                 "was {}. "
-                                 "I will ignore this.".format(enclosed,
-                                                              field_name))
+                    _ = "Closing conditional '{}' found, but the last opened" \
+                        " conditional was {}. I will " \
+                        "ignore this.".format(enclosed, field_name)
+                    logger.error(_)
                 else:
                     conditional_chain.pop()
         elif is_field(enclosed):
-            # fixme: first tests if that is a valid field!
-            out += fields[get_field_name(enclosed).replace("text:", "")]
+            field_name = get_field_name(enclosed)
+            if field_name in fields:
+                out += fields[field_name]
+            else:
+                _ = "Could not find value for field {}".format(field_name)
+                logger.error(_)
     return out, conditional_chain
 
 
 class TemplateTester(object):
-    def __init__(self, template: str, fields: dict, css: str):
+    def __init__(self, template: str, fields: Dict[str, str], css: str):
         self.html = ""
         self.template = template
         self.fields = fields

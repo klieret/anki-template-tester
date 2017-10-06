@@ -43,10 +43,13 @@ class TestParsing(unittest.TestCase):
     def test_process_line(self):
         fields = {"t": "asf", "tt": "xyz", "ttt": "asdf",
                   "f": "", "ff": "  ", "fff": " "}
-        qa = {"{{#t}} asdf {{/t}}": " asdf ",
-              "{{#t}} asdf ": " asdf ",
-              "{{#t}} yes {{#f}} xyt": " yes ",
-              "before {{#t}} yes {{#f}} no {{/f}} blah {{/t}}": "before  yes  blah "}
+        qa = {"{{#t}} asdf {{/t}}": (" asdf ", []),
+              "{{#t}} asdf ": (" asdf ", ["#t"]),
+              "{{#t}} yes {{#f}} xyt": (" yes ", ["#t", "#f"]),
+              "before {{#t}} yes {{#f}} no {{/f}} blah {{/t}}":
+                  ("before  yes  blah ", []),
+              "before {{t}}": ("before asf", []),
+              "before {{#t}}{{t}}{{/t}}": ("before asf", [])}
         for q, a in qa.items():
             with self.subTest(question=q):
                 self.assertEqual(process_line(q, [], fields), a)
