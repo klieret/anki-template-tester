@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from templatetester import *
+from previewtemplate import *
 
 
 class TestParsing(unittest.TestCase):

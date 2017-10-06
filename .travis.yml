@@ -5,7 +5,7 @@ python:
 install:
   - "pip install -r requirements.txt"
 script:
-  - "python3 unittest.py"
-  - "sh clitest.sh" 
+  - "python3 test_units.py"
+  - "sh test_cli.sh"
 
 
