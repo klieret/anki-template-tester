@@ -1,0 +1,9 @@
+language: python
+python:
+  - "3.4"
+  - "3.5"
+script:
+  - "python3 unittest.py"
+  - "sh clitest.sh" 
+
+
