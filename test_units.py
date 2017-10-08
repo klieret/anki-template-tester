@@ -38,7 +38,8 @@ class TestParsing(unittest.TestCase):
               ("^t", "^ff"): False}
         for q, a in qa.items():
             with self.subTest(question=q):
-                self.assertEqual(evaluate_conditional_chain(list(q), fields), a)
+                self.assertEqual(evaluate_conditional_chain(list(q), fields),
+                                 a)
 
     def test_process_line(self):
         fields = {"t": "asf", "tt": "xyz", "ttt": "asdf",

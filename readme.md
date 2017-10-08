@@ -5,11 +5,22 @@ When writing templatex, the built in template editor of Anki can become quite cu
 
 This small script takes a template (and a CSS style sheet) together with a file which contains some exemplary field values and gives back a HTML file which can be properly viewed in the browser.
 
+
+| Branch | Description | Travis |
+| -------| ----------- | ------ | 
+| [master](https://github.com/klieret/anki-template-tester/tree/master) | (Hopefully) stable release | [![Build Status](https://travis-ci.org/klieret/anki-template-tester.svg?branch=master)](https://travis-ci.org/klieret/anki-template-tester) | 
+| [development](https://github.com/klieret/anki-template-tester/tree/development)| Work on new features in progress. Might be completely broken from time to time. | [![Build Status](https://travis-ci.org/klieret/anki-template-tester.svg?branch=development)](https://travis-ci.org/klieret/anki-template-tester) | 
+
+
+## Installation
+
+All that is needed is the stand alone file ```previewtemplate.py``` and a python3 installation. If your python version is earlier than 3.4, please install the ```typing``` module, e.g. via ```sudo pip3 install typing```. 
+
 ## Usage
 
 ```
-$ python3 template-tester.py --help
-usage: template-tester.py [-h] [-s STYLE] [-o OUTPUT] template fields
+$ python3 previewtemplate.py --help
+usage: previewtemplate.py [-h] [-s STYLE] [-o OUTPUT] template fields
 
 Test Anki templates, i.e. fill in field values and CSS to get a HTML file that
 can be displayed in the web browser.
@@ -24,4 +35,9 @@ optional arguments:
                         Include CSS style sheet
   -o OUTPUT, --output OUTPUT
                         Output HTML file
+
 ```
+
+## License
+
+MIT license. See file ```license.txt``` enclosed in the repository.

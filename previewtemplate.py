@@ -11,7 +11,10 @@ except ImportError:
 from typing import Dict, List
 import csv
 
-
+"""Small tool to preview templates for the spaced repetition flashcard program
+ Anki.
+ https://github.com/klieret/anki-template-tester
+"""
 
 
 def setup_logger(name="Logger"):
@@ -66,7 +69,10 @@ def setup_logger(name="Logger"):
 logger = setup_logger("TemplateTest")
 
 
-def import_dict(filename):
+def import_dict(filename: str) -> Dict[str, str]:
+    """ Read a csv file and interpret each line as entries for a dictionary.
+    Used to import the exemplary field values from a text file.
+    """
     ret = {}
     with open(filename) as csvfile:
         reader = csv.reader(csvfile, delimiter=":", quotechar='"')
@@ -82,6 +88,7 @@ def import_dict(filename):
 
 
 def get_cli_args():
+    """ Get arguments from command line. """
     _ = "Test Anki templates, i.e. fill in field values and CSS to get a " \
         "HTML file that can be displayed in the web browser."
     parser = argparse.ArgumentParser(description=_)
@@ -94,7 +101,19 @@ def get_cli_args():
     return parser.parse_args()
 
 
-def next_braces(string):
+def next_braces(string: str) -> (str, str, str):
+    """Go through the string $string and find the next value contained in
+    double braces, e.g. "before {{foo}} after" would return the triple
+    ("before ", "foo", " after").
+
+    Args:
+        string: Input string.
+
+    Returns: (before, enclosed, after)
+        before: Everything before the double braces
+        enclosed: String enclosed in the double braces
+        after: Everything after the double braces.
+    """
     match = re.search(r"\{\{([^\}]*)\}\}", string)
     if not match:
         before = string
@@ -107,37 +126,53 @@ def next_braces(string):
     return before, enclosed, after
 
 
-def is_pos_conditional(string: str) -> bool:
-    return string.startswith("#")
+def is_pos_conditional(enclosed: str) -> bool:
+    """ True if {{$enclosed}} corresponds to the beginning of an 'if empty'
+    statement on the Anki card template.
+    """
+    return enclosed.startswith("#")
 
 
-def is_neg_conditional(string: str) -> bool:
-    return string.startswith("^")
+def is_neg_conditional(enclosed: str) -> bool:
+    """ True if {{$enclosed}} corresponds to the beginning of an 'if not empty'
+    statement on the Anki card template.
+    """
+    return enclosed.startswith("^")
 
 
-def is_close_conditional(string: str) -> bool:
-    return string.startswith("/")
+def is_close_conditional(enclosed: str) -> bool:
+    """ True if {{$enclosed}} corresponds to the end of an 'if' statement
+    on the Anki card template.
+    """
+    return enclosed.startswith("/")
 
 
-def is_field(string: str) -> bool:
-    return string and not is_pos_conditional(string) and not \
-        is_neg_conditional(string) and not is_close_conditional(string)
+def is_field(enclosed: str) -> bool:
+    """ True if {{$enclosed}} corresponds to a field value
+    on the Anki card template.
+    """
+    return enclosed and not is_pos_conditional(enclosed) and not \
+        is_neg_conditional(enclosed) and not is_close_conditional(enclosed)
 
 
-def get_field_name(string: str) -> str:
-    if is_pos_conditional(string):
-        return string[1:]
-    if is_neg_conditional(string):
-        return string[1:]
-    if is_close_conditional(string):
-        return string[1:]
-    if is_field(string):
-        string = string.replace("text:", "")
-        return string
+def get_field_name(enclosed: str) -> str:
+    """ Gets the name of the field which is used in the {{$enclosed}}
+    statement on the Anki card template."""
+    if is_pos_conditional(enclosed):
+        return enclosed[1:]
+    if is_neg_conditional(enclosed):
+        return enclosed[1:]
+    if is_close_conditional(enclosed):
+        return enclosed[1:]
+    if is_field(enclosed):
+        enclosed = enclosed.replace("text:", "")
+        return enclosed
     return ""
 
 
 def evaluate_conditional(string: str, fields: Dict[str, str]) -> bool:
+    """ Evaluates a conditional from $string on a Anki card template
+    using the field values $fields. """
     field_name = get_field_name(string)
     if field_name not in fields:
         logger.warning("Field '{}' from conditional '{}' not defined! "
@@ -153,6 +188,12 @@ def evaluate_conditional(string: str, fields: Dict[str, str]) -> bool:
 
 def evaluate_conditional_chain(conditional_chain: List[str],
                                fields: Dict[str, str]) -> bool:
+    """ When we go through the template, we encounter conditionals, which
+    can be enclosed in each other. This means that at any point of the
+    template we can be inside a list of conditionals ($conditional_chain).
+    Here we test if the whole $conditional_chain evaluates to true, i.e.
+    if the code enclosed would be run.
+    """
     for conditional in conditional_chain:
         if not evaluate_conditional(conditional, fields):
             return False
@@ -161,6 +202,20 @@ def evaluate_conditional_chain(conditional_chain: List[str],
 
 def process_line(line: str, conditional_chain: List[str],
                  fields: Dict[str, str]):
+    """ Processes a line in the template, i.e. returns the output html code
+    after evaluating all if statements and filling the fields. Since we
+    oftentimes are in the middle of several if statements, we need to pass
+    the current conditional_chain (i.e. the list of if statments the following
+    line will be subject to) on (and also need to use it).
+
+    Args:
+        line: Line we are processing
+        conditional_chain: In which conditionals are we currently enclosed?
+        fields: field values
+
+    Returns:
+        (html output, conditional_chain)
+    """
     after = line
     out = ""
     while after:
@@ -194,6 +249,8 @@ def process_line(line: str, conditional_chain: List[str],
 
 
 class TemplateTester(object):
+    """ Main object that processes the template, the fields and the style
+    sheet. """
     def __init__(self, template: str, fields: Dict[str, str], css: str):
         self.html = ""
         self.template = template
@@ -201,12 +258,14 @@ class TemplateTester(object):
         self.css = css
 
     def render(self) -> str:
-        self.start_html_file()
-        self.main_loop()
-        self.end_html_file()
+        """ Parse the template and return the html string. """
+        self._start_html_file()
+        self._main_loop()
+        self._end_html_file()
         return self.html
 
-    def start_html_file(self):
+    def _start_html_file(self):
+        """ Start html file. """
         self.html = "<html>"
         self.html += "<head>"
         self.html += '<meta http-equiv="Content-Type" content="text/html; ' \
@@ -221,11 +280,13 @@ class TemplateTester(object):
         self.html += "</head>"
         self.html += "<body>"
 
-    def end_html_file(self):
+    def _end_html_file(self):
+        """ End html file. """
         self.html += "</body>"
         self.html += "</html>"
 
-    def main_loop(self):
+    def _main_loop(self):
+        """ Process template line by line. """
         lines = self.template.split("\n")
         conditional_chain = []
         for line in lines:
