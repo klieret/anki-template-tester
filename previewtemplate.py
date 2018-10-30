@@ -296,6 +296,7 @@ class TemplateTester(object):
             out, conditional_chain = process_line(line, conditional_chain,
                                                   self.fields)
             self.html += out
+            self.html += "\n"
 
 
 if __name__ == "__main__":
