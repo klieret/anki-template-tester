@@ -75,13 +75,16 @@ def import_dict(filename: str) -> Dict[str, str]:
     """
     ret = {}
     with open(filename) as csvfile:
-        reader = csv.reader(csvfile, delimiter=":", quotechar='"')
-        i = 0
-        for row in reader:
-            i += 1
+        reader = csv.reader(csvfile, delimiter=":", quotechar='"', quoting=csv.QUOTE_ALL, skipinitialspace=True)
+        for i, row in enumerate(reader):
             if not len(row) == 2:
                 logger.warning("Row {} of file {} does not seem to have "
-                               "the proper format. Skip.".format(i, filename))
+                               "the proper format. Skip. "
+                               "More details in debug.".format(i, filename))
+                logger.debug("We were expecting to find 2 columns "
+                             "but found {}.".format(len(row)))
+                logger.debug("Here's that row FYI: {}.".format(row))
+                logger.debug('Please note that only \'"\' can be used as quotation char (not \'u"\' etc)!') 
                 continue
             ret[row[0]] = row[1]
     return ret
