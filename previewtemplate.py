@@ -75,7 +75,7 @@ def import_dict(filename: str) -> Dict[str, str]:
     """
     ret = {}
     with open(filename) as csvfile:
-        reader = csv.reader(csvfile, delimiter=":", quotechar='"', quoting=csv.QUOTE_ALL, skipinitialspace=True)
+        reader = csv.reader(csvfile, delimiter=":", quotechar='"', quoting=csv.QUOTE_ALL, escapechar="\\", skipinitialspace=True)
         for i, row in enumerate(reader):
             if not len(row) == 2:
                 logger.warning("Row {} of file {} does not seem to have "
