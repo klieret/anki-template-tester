@@ -75,7 +75,14 @@ def import_dict(filename: str) -> Dict[str, str]:
     """
     ret = {}
     with open(filename) as csvfile:
-        reader = csv.reader(csvfile, delimiter=":", quotechar='"', quoting=csv.QUOTE_ALL, escapechar="\\", skipinitialspace=True)
+        reader = csv.reader(
+            csvfile,
+            delimiter=":",
+            quotechar='"',
+            quoting=csv.QUOTE_ALL,
+            escapechar="\\",
+            skipinitialspace=True
+        )
         for i, row in enumerate(reader):
             if not len(row) == 2:
                 logger.warning("Row {} of file {} does not seem to have "
@@ -84,7 +91,8 @@ def import_dict(filename: str) -> Dict[str, str]:
                 logger.debug("We were expecting to find 2 columns "
                              "but found {}.".format(len(row)))
                 logger.debug("Here's that row FYI: {}.".format(row))
-                logger.debug('Please note that only \'"\' can be used as quotation char (not \'u"\' etc)!') 
+                logger.debug('Please note that only \'"\' can be used as '
+                             'quotation char (not \'u"\' etc)!')
                 continue
             ret[row[0]] = row[1]
     return ret
@@ -117,7 +125,7 @@ def next_braces(string: str) -> (str, str, str):
         enclosed: String enclosed in the double braces
         after: Everything after the double braces.
     """
-    match = re.search(r"\{\{([^\}]*)\}\}", string)
+    match = re.search(r"{{([^}]*)}}", string)
     if not match:
         before = string
         enclosed = ""
@@ -338,7 +346,13 @@ if __name__ == "__main__":
     tt = TemplateTester(template_, fields_, css_)
     html_out = tt.render()
 
+    if not os.path.exists(os.path.dirname(args.output)):
+        logger.debug("Creating folder {}.".format(
+            os.path.dirname(args.output))
+        )
+        os.makedirs(os.path.dirname(args.output))
+
     with open(args.output, "w") as output_file:
         output_file.write(html_out)
 
-    logger.info("Output written to {}".format(args.output))
+    logger.info("Output written to {}".format(os.path.abspath(args.output)))
